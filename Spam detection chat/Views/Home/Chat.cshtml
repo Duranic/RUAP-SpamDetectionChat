@@ -1,0 +1,95 @@
+﻿
+@{
+    ViewBag.Title = "Chat";
+}
+
+<script src="~/Scripts/jquery-3.3.1.js"></script>
+<script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+<style>
+
+    #chatContainer {
+        height: 500px;
+        overflow-y: auto;
+    }
+    .message {
+        padding-bottom: 20px;
+    }
+    td {
+        width: 150px;
+    }
+</style>
+<div class="container">
+    <h2>Chat</h2>
+    <div id="chatContainer">
+        <table id="chat">
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <input type="text" id="message" />
+    <input type="button" id="send" value="send" />
+    <input type="hidden" id="displayName" />
+
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+
+    <script src="~/signalr/hubs"></script>
+
+    <script>
+        $(function () {
+
+            var chat = $.connection.myHub1;
+            chat.client.addNewMessage = function (name, message) {
+                if (name == $('#displayName').val()) {
+                    $('#chat').append(
+                                 `<tr>
+                                    <td></td>
+                                    <td><b>` + htmlEncode(name) + `:</td>
+                                  </tr>
+                                  <tr>
+                                    <td></td>
+                                    <td colspan = "2", class="message">`+ htmlEncode(message) + `</td>
+                                  </tr>`);
+                }
+                else {
+                    $('#chat').append(
+                                 `<tr>
+                                    <td><b>` + htmlEncode(name) + `:</td>
+                                  </tr>
+                                  <tr>
+                                    <td colspan = "2", class="message">`+ htmlEncode(message) + `</td>
+                                  </tr>`);
+                }
+
+
+            };
+
+            $('#displayName').val(prompt('Enter name:', ''));
+            $('#message').focus();
+
+
+            chat.client.markSpam = function () {
+                $('#chat').append('<tr><td></td><td><b>spam</td></tr>');
+            };
+
+            $.connection.hub.start().done(function () {
+                $('#send').click(function () {
+                    chat.server.send($('#displayName').val(), $('#message').val());
+                    $('#message').val('').focus();
+                })
+            })
+        })
+
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+
+    </script>
+
+}
